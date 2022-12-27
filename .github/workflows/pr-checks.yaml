@@ -22,7 +22,7 @@ jobs:
           path: flipper-scripts
       
       # checkout linter
-      - run: rm -rf flipper-scripts
+      - run: rm -rf fff-ir-lint
       - uses: actions/checkout@v3
         with:
           repository: 'darmiel/fff-ir-lint'
