@@ -47,7 +47,7 @@ jobs:
         
       - name: 🪲 Generate Duplicate Report
         id: run-dupe
-        continue-on-error: true
+        if: always()
         run: | 
           export PYTHONPATH="$PWD/flipper-scripts"
           ls -la
@@ -58,7 +58,7 @@ jobs:
 
       - name: 🕶️ Generate Linter Report
         id: run-lint
-        continue-on-error: true
+        if: always()
         run: |
           export PYTHONPATH="$PWD/fff-ir-lint"
           echo "OUTPUT<<EOF" >> $GITHUB_OUTPUT
@@ -67,15 +67,17 @@ jobs:
 
       - name: Comment Report
         uses: thollander/actions-comment-pull-request@v2
-        if: ${{ steps.run.outputs.OUTPUT }}
+        if: always()
         with:
-          message: 
+          message: |
             <details>
               <summary>🪲 Linter Report</summary>
 
               ${{ steps.run-lint.outputs.OUTPUT }}  
               
-            </details>|
+            </details>
+            
+            ---
 
             <details>
               <summary>🕶 Duplicates Report</summary>
