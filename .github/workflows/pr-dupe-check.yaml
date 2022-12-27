@@ -1,64 +1,51 @@
-name: "🧐 Checking for Duplicates"
+name: "⚒ Generating Duplicate Report"
 
 on:
-  pull_request_target:
+  pull_request:
     paths: '**.ir'
-
+    
 jobs:
-  dupe-checker:
-    name: "🐛 Looking for duplicates"
+  lint:
+    name: "🎭 Looking for possible duplicates"
     runs-on: ubuntu-latest
     steps:
-      # checkout IRDB
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
-      # checkout Flipper Scripts
-      - name: Clean Script Directory
-        run: rm -rf flipper-scripts
       - uses: actions/checkout@v3
         with:
           repository: 'darmiel/flipper-scripts'
           path: flipper-scripts
       
-      # only check files changed in the PR
-      - name: Get Changed Files
+      - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v29.0.7
         with:
           files: "**/*.ir"
           separator: "\n"
-          sha: ${{ github.event.pull_request.head.sha }}
           
       - name: Save changed file names to file
-        run: echo '${{ steps.changed-files.outputs.all_changed_files }}' > changed_file_list.txt
-      
+        run: echo '${{ steps.changed-files.outputs.added_files }}' > added_file_list.txt
+        
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10' 
-
-      - name: Run Dupe Checker if at least 1 IR File Changed
-        uses: mathiasvr/command-output@v1.1.0
+        
+      - name: Generate Report
         id: run
-        continue-on-error: true
-        with:
-          run: python flipper-scripts/infrared/duplicate_finder.py file:changed_file_list.txt
+        run: | 
+          export PYTHONPATH="$PWD/flipper-scripts"
+          echo "OUTPUT<<EOF" >> $GITHUB_OUTPUT
+          python flipper-scripts/infrared/duplicate_finder.py file:added_file_list.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-      - uses: ntsd/auto-request-changes-action@v2
-        name: "Request Changes"
-        if: ${{ steps.run.outputs.stderr }}
+      - name: Comment Report
+        uses: thollander/actions-comment-pull-request@v2
+        if: ${{ steps.run.outputs.OUTPUT }}
         with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          comment-body: |
+          message: |
             <details>
-              <summary>🕶️ Duplicate Result</summary>
-              
-              ${{ steps.run.outputs.stdout }}
-              
+              <summary>🕶 Duplicates Report</summary>
+              ${{ steps.run.outputs.OUTPUT }}  
             </details>
-
-      # - name: Fail Pipeline
-      #   if: ${{ steps.run.outputs.stderr }}
-      #   run: exit 1
