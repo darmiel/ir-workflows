@@ -45,24 +45,38 @@ jobs:
         with:
           python-version: '3.10' 
         
+      # Dupe Report
       - name: 🪲 Generate Duplicate Report
-        id: run-dupe
         if: always()
         run: | 
           export PYTHONPATH="$PWD/flipper-scripts"
+          python flipper-scripts/infrared/duplicate_finder.py file:added_file_list.txt | tee .dupe-output.txt
+      
+      - name: Store Dupe Reports
+        id: run-dupe
+        if: always()
+        run: |
           delimiter="$(openssl rand -hex 8)"
           echo "OUTPUT<<${delimiter}" >> "${GITHUB_OUTPUT}"
-          python flipper-scripts/infrared/duplicate_finder.py file:added_file_list.txt || true >> "${GITHUB_OUTPUT}"
-          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
-
+          cat .dupe-output.txt >> "${GITHUB_OUTPUT}"
+          echo "${delimiter}" >> $GITHUB_OUTPUT
+    
+      # -------------------------------------------------------------------------------------
+      
+      # Lint Report
       - name: 🕶️ Generate Linter Report
-        id: run-lint
         if: always()
         run: |
           export PYTHONPATH="$PWD/fff-ir-lint"
+          python fff-ir-lint/main.py github2 file:changed_file_list.txt | tee .linter-output.txt
+      
+      - name: Store Linter Reports
+        id: run-lint
+        if: always()
+        run: |
           delimiter="$(openssl rand -hex 8)"
           echo "OUTPUT<<${delimiter}" >> "${GITHUB_OUTPUT}"
-          python fff-ir-lint/main.py github2 file:changed_file_list.txt || true >> "${GITHUB_OUTPUT}"
+          cat .linter-output.txt >> "${GITHUB_OUTPUT}"
           echo "${delimiter}" >> $GITHUB_OUTPUT 
 
       - name: Comment Report
