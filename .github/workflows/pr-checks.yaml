@@ -50,22 +50,20 @@ jobs:
         if: always()
         run: | 
           export PYTHONPATH="$PWD/flipper-scripts"
-          ls -la
-          ls -la flipper-scripts
-          echo "OUTPUT<<EOF" >> $GITHUB_OUTPUT
-          python flipper-scripts/infrared/duplicate_finder.py file:added_file_list.txt
-          echo "TEST" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          delimiter="$(openssl rand -hex 8)"
+          echo "OUTPUT<<${delimiter}" >> "${GITHUB_OUTPUT}"
+          python flipper-scripts/infrared/duplicate_finder.py file:added_file_list.txt >> "${GITHUB_OUTPUT}"
+          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
       - name: 🕶️ Generate Linter Report
         id: run-lint
         if: always()
         run: |
           export PYTHONPATH="$PWD/fff-ir-lint"
-          echo "OUTPUT<<EOF" >> $GITHUB_OUTPUT
-          python fff-ir-lint/main.py github2 file:changed_file_list.txt
-          echo "TEST" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT 
+          delimiter="$(openssl rand -hex 8)"
+          echo "OUTPUT<<${delimiter}" >> "${GITHUB_OUTPUT}"
+          python fff-ir-lint/main.py github2 file:changed_file_list.txt >> "${GITHUB_OUTPUT}"
+          echo "${delimiter}" >> $GITHUB_OUTPUT 
 
       - name: Comment Report
         uses: thollander/actions-comment-pull-request@v2
