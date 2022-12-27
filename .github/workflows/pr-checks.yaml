@@ -45,14 +45,18 @@ jobs:
         
       - name: 🪲 Generate Duplicate Report
         id: run-dupe
+        continue-on-error: true
         run: | 
           export PYTHONPATH="$PWD/flipper-scripts"
+          ls -la
+          ls -la flipper-scripts
           echo "OUTPUT<<EOF" >> $GITHUB_OUTPUT
           python flipper-scripts/infrared/duplicate_finder.py file:added_file_list.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: 🕶️ Generate Linter Report
         id: run-lint
+        continue-on-error: true
         run: |
           export PYTHONPATH="$PWD/fff-ir-lint"
           echo "OUTPUT<<EOF" >> $GITHUB_OUTPUT
