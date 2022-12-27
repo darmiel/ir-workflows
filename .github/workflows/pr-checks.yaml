@@ -1,0 +1,79 @@
+name: Check PR
+
+on:
+  pull_request_target:
+    paths: '**.ir'
+    
+jobs:
+  dupe-checker:
+    name: "🎭 Looking for possible duplicates"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      
+      # checkout scripts
+      - run: rm -rf flipper-scripts
+      - uses: actions/checkout@v3
+        with:
+          repository: 'darmiel/flipper-scripts'
+          path: flipper-scripts
+      
+      # checkout linter
+      - run: rm -rf flipper-scripts
+      - uses: actions/checkout@v3
+        with:
+          repository: 'darmiel/fff-ir-lint'
+          path: fff-ir-lint
+      
+      # find changed files and write to file
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v29.0.7
+        with:
+          files: "**/*.ir"
+          separator: "\n"
+          sha: ${{ github.event.pull_request.head.sha }}
+      - name: Save changed file names to file
+        run: echo '${{ steps.changed-files.outputs.added_files }}' > added_file_list.txt
+        
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' 
+        
+      - name: 🪲 Generate Duplicate Report
+        id: run-dupe
+        run: | 
+          export PYTHONPATH="$PWD/flipper-scripts"
+          echo "OUTPUT<<EOF" >> $GITHUB_OUTPUT
+          python flipper-scripts/infrared/duplicate_finder.py file:added_file_list.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 🕶️ Generate Linter Report
+        id: run-lint
+        run: |
+          export PYTHONPATH="$PWD/fff-ir-lint"
+          echo "OUTPUT<<EOF" >> $GITHUB_OUTPUT
+          python fff-ir-lint/main.py github2 file:changed_file_list.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT 
+
+      - name: Comment Report
+        uses: thollander/actions-comment-pull-request@v2
+        if: ${{ steps.run.outputs.OUTPUT }}
+        with:
+          message: 
+            <details>
+              <summary>🪲 Linter Report</summary>
+
+              ${{ steps.run-lint.outputs.OUTPUT }}  
+              
+            </details>|
+
+            <details>
+              <summary>🕶 Duplicates Report</summary>
+
+              ${{ steps.run-dupe.outputs.OUTPUT }}  
+
+            </details>
