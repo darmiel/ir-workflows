@@ -52,7 +52,7 @@ jobs:
           export PYTHONPATH="$PWD/flipper-scripts"
           delimiter="$(openssl rand -hex 8)"
           echo "OUTPUT<<${delimiter}" >> "${GITHUB_OUTPUT}"
-          python flipper-scripts/infrared/duplicate_finder.py file:added_file_list.txt >> "${GITHUB_OUTPUT}"
+          python flipper-scripts/infrared/duplicate_finder.py file:added_file_list.txt || true >> "${GITHUB_OUTPUT}"
           echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
       - name: 🕶️ Generate Linter Report
@@ -62,7 +62,7 @@ jobs:
           export PYTHONPATH="$PWD/fff-ir-lint"
           delimiter="$(openssl rand -hex 8)"
           echo "OUTPUT<<${delimiter}" >> "${GITHUB_OUTPUT}"
-          python fff-ir-lint/main.py github2 file:changed_file_list.txt >> "${GITHUB_OUTPUT}"
+          python fff-ir-lint/main.py github2 file:changed_file_list.txt || true >> "${GITHUB_OUTPUT}"
           echo "${delimiter}" >> $GITHUB_OUTPUT 
 
       - name: Comment Report
