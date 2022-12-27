@@ -99,3 +99,11 @@ jobs:
               ${{ steps.run-dupe.outputs.OUTPUT }}  
 
             </details>
+            
+      - name: Fail Linter
+        if: ${{ steps.run-lint.outputs.OUTPUT }}
+        run: exit 1
+
+      - name: Fail Dupe Checker
+        if: ${{ steps.run-dupe.outputs.OUTPUT }}
+        run: exit 1
